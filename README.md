@@ -56,7 +56,7 @@ Add your RedX API credentials to `.env`:
 
 ```env
 REDX_BASE_URL=https://openapi.redx.com.bd/v1.0.0-beta
-REDX_API_TOKEN=your-redx-api-token
+REDX_API_TOKEN="Bearer your-redx-jwt-token"
 REDX_TOKEN_HEADER=API-ACCESS-TOKEN
 REDX_TIMEOUT=30
 
@@ -70,6 +70,14 @@ Optional webhook secret protection:
 REDX_WEBHOOK_SECRET=your-shared-secret
 REDX_WEBHOOK_SECRET_HEADER=X-Redx-Webhook-Secret
 ```
+
+RedX expects the token in this HTTP header:
+
+```http
+API-ACCESS-TOKEN: Bearer your-redx-jwt-token
+```
+
+So `REDX_TOKEN_HEADER` is the header name, and `REDX_API_TOKEN` is the full header value.
 
 ## Configuration
 

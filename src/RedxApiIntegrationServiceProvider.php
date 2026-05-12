@@ -3,6 +3,7 @@
 namespace Kejubayer\RedxApiIntegration;
 
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\ServiceProvider;
 
 class RedxApiIntegrationServiceProvider extends ServiceProvider
@@ -12,7 +13,7 @@ class RedxApiIntegrationServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/redx-api-integration.php', 'redx-api-integration');
 
         $this->app->singleton(RedxApiIntegration::class, function (Application $app): RedxApiIntegration {
-            return new RedxApiIntegration($app['http'], $app['config']->get('redx-api-integration', []));
+            return new RedxApiIntegration($app->make(HttpFactory::class), $app['config']->get('redx-api-integration', []));
         });
 
         $this->app->alias(RedxApiIntegration::class, 'redx');
