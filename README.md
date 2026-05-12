@@ -124,8 +124,11 @@ $response = Redx::createParcel([
     'customer_name' => 'Customer Name',
     'customer_phone' => '01700000000',
     'delivery_area' => 'Dhaka',
-    'delivery_address' => 'Dhaka, Bangladesh',
+    'delivery_area_id' => 1,
+    'customer_address' => 'Dhaka, Bangladesh',
     'cash_collection_amount' => 1000,
+    'parcel_weight' => 1,
+    'value' => 1000,
 ]);
 
 $data = $response->json();
@@ -144,8 +147,11 @@ class ParcelController
             'customer_name' => 'Customer Name',
             'customer_phone' => '01700000000',
             'delivery_area' => 'Dhaka',
-            'delivery_address' => 'Dhaka, Bangladesh',
+            'delivery_area_id' => 1,
+            'customer_address' => 'Dhaka, Bangladesh',
             'cash_collection_amount' => 1000,
+            'parcel_weight' => 1,
+            'value' => 1000,
         ]);
 
         return $response->json();
@@ -191,15 +197,37 @@ $response = Redx::createParcel([
     'customer_name' => 'Customer Name',
     'customer_phone' => '01700000000',
     'delivery_area' => 'Dhaka',
-    'delivery_address' => 'House 1, Road 2, Dhaka',
-    'cash_collection_amount' => 1500,
-    'invoice_number' => 'INV-1001',
+    'delivery_area_id' => 1,
+    'customer_address' => 'House 1, Road 2, Dhaka',
+    'merchant_invoice_id' => 'INV-1001',
+    'cash_collection_amount' => '1500',
+    'parcel_weight' => 1,
+    'instruction' => 'Handle with care',
+    'value' => 1500,
+    'is_closed_box' => false,
+    'pickup_store_id' => 1,
+    'parcel_details_json' => [
+        [
+            'name' => 'Product name',
+            'category' => 'Product category',
+            'value' => 1500,
+        ],
+    ],
 ]);
 
 if ($response->successful()) {
     $parcel = $response->json();
 }
 ```
+
+Required RedX create parcel fields usually include:
+
+```text
+customer_name, customer_phone, delivery_area, delivery_area_id,
+customer_address, cash_collection_amount, parcel_weight, value
+```
+
+Use `merchant_invoice_id` for your invoice number when creating a parcel. Webhook payloads may return that value as `invoice_number`.
 
 ### parcels
 
@@ -398,7 +426,7 @@ Call any RedX PUT endpoint.
 
 ```php
 $response = Redx::put('/parcel/12345', [
-    'delivery_address' => 'Updated address, Dhaka',
+    'customer_address' => 'Updated address, Dhaka',
 ]);
 ```
 
@@ -408,7 +436,7 @@ Call any RedX PATCH endpoint.
 
 ```php
 $response = Redx::patch('/parcel/12345', [
-    'delivery_address' => 'Updated address, Dhaka',
+    'customer_address' => 'Updated address, Dhaka',
 ]);
 ```
 
