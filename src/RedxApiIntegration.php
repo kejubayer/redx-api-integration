@@ -20,6 +20,16 @@ class RedxApiIntegration
         return $this->post($this->endpoint('create_parcel'), $payload);
     }
 
+    public function parcels(array $query = []): Response
+    {
+        return $this->get($this->endpoint('list_parcels'), $query);
+    }
+
+    public function parcelDetails(string|int $parcelId): Response
+    {
+        return $this->get($this->endpoint('parcel_details', ['parcel_id' => (string) $parcelId]));
+    }
+
     public function trackParcel(string $trackingId): Response
     {
         return $this->get($this->endpoint('track_parcel', ['tracking_id' => $trackingId]));
@@ -28,6 +38,53 @@ class RedxApiIntegration
     public function cancelParcel(string|int $parcelId, array $payload = []): Response
     {
         return $this->post($this->endpoint('cancel_parcel', ['parcel_id' => (string) $parcelId]), $payload);
+    }
+
+    public function areas(array $query = []): Response
+    {
+        return $this->get($this->endpoint('areas'), $query);
+    }
+
+    public function stores(array $query = []): Response
+    {
+        return $this->get($this->endpoint('stores'), $query);
+    }
+
+    public function getEndpoint(string $name, array $replacements = [], array $query = []): Response
+    {
+        return $this->get($this->endpoint($name, $replacements), $query);
+    }
+
+    public function postEndpoint(string $name, array $payload = [], array $replacements = []): Response
+    {
+        return $this->post($this->endpoint($name, $replacements), $payload);
+    }
+
+    public function putEndpoint(string $name, array $payload = [], array $replacements = []): Response
+    {
+        return $this->put($this->endpoint($name, $replacements), $payload);
+    }
+
+    public function patchEndpoint(string $name, array $payload = [], array $replacements = []): Response
+    {
+        return $this->patch($this->endpoint($name, $replacements), $payload);
+    }
+
+    public function deleteEndpoint(string $name, array $payload = [], array $replacements = []): Response
+    {
+        return $this->delete($this->endpoint($name, $replacements), $payload);
+    }
+
+    public function callEndpoint(string $method, string $name, array $payload = [], array $replacements = []): Response
+    {
+        return match (strtolower($method)) {
+            'get' => $this->getEndpoint($name, $replacements, $payload),
+            'post' => $this->postEndpoint($name, $payload, $replacements),
+            'put' => $this->putEndpoint($name, $payload, $replacements),
+            'patch' => $this->patchEndpoint($name, $payload, $replacements),
+            'delete' => $this->deleteEndpoint($name, $payload, $replacements),
+            default => throw new InvalidArgumentException("HTTP method [{$method}] is not supported."),
+        };
     }
 
     public function get(string $uri, array $query = []): Response
@@ -43,6 +100,11 @@ class RedxApiIntegration
     public function put(string $uri, array $payload = []): Response
     {
         return $this->request()->put($uri, $payload);
+    }
+
+    public function patch(string $uri, array $payload = []): Response
+    {
+        return $this->request()->patch($uri, $payload);
     }
 
     public function delete(string $uri, array $payload = []): Response
@@ -73,7 +135,7 @@ class RedxApiIntegration
         return $request;
     }
 
-    private function endpoint(string $name, array $replacements = []): string
+    public function endpoint(string $name, array $replacements = []): string
     {
         $endpoint = $this->config['endpoints'][$name] ?? null;
 

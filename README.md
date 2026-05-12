@@ -9,6 +9,8 @@ Use this package to create RedX parcels, track parcels, cancel parcels, call cus
 - Laravel auto-discovery support
 - RedX API client using Laravel HTTP client
 - Configurable RedX base URL, API token header, timeout, and endpoints
+- Easy named methods for common RedX endpoints
+- Generic endpoint-name helpers for all custom RedX endpoints
 - Built-in RedX webhook route
 - Stores every webhook request in `redx_webhook_requests`
 - Extracts searchable webhook fields like tracking number, status, invoice number, and delivery type
@@ -82,8 +84,12 @@ Default endpoint configuration:
 ```php
 'endpoints' => [
     'create_parcel' => env('REDX_CREATE_PARCEL_ENDPOINT', '/parcel'),
+    'list_parcels' => env('REDX_LIST_PARCELS_ENDPOINT', '/parcel'),
+    'parcel_details' => env('REDX_PARCEL_DETAILS_ENDPOINT', '/parcel/{parcel_id}'),
     'track_parcel' => env('REDX_TRACK_PARCEL_ENDPOINT', '/parcel/track/{tracking_id}'),
     'cancel_parcel' => env('REDX_CANCEL_PARCEL_ENDPOINT', '/parcel/{parcel_id}/cancel'),
+    'areas' => env('REDX_AREAS_ENDPOINT', '/areas'),
+    'stores' => env('REDX_STORES_ENDPOINT', '/stores'),
 ],
 ```
 
@@ -91,8 +97,12 @@ If your RedX merchant account uses different endpoint paths, update the config o
 
 ```env
 REDX_CREATE_PARCEL_ENDPOINT=/parcel
+REDX_LIST_PARCELS_ENDPOINT=/parcel
+REDX_PARCEL_DETAILS_ENDPOINT=/parcel/{parcel_id}
 REDX_TRACK_PARCEL_ENDPOINT=/parcel/track/{tracking_id}
 REDX_CANCEL_PARCEL_ENDPOINT=/parcel/{parcel_id}/cancel
+REDX_AREAS_ENDPOINT=/areas
+REDX_STORES_ENDPOINT=/stores
 ```
 
 ## Basic Usage
@@ -137,6 +147,31 @@ class ParcelController
 
 ## Available Methods
 
+Quick method list:
+
+| Method | Purpose |
+| --- | --- |
+| `Redx::createParcel($payload)` | Create a RedX parcel |
+| `Redx::parcels($query)` | List parcels |
+| `Redx::parcelDetails($parcelId)` | Get parcel details |
+| `Redx::trackParcel($trackingId)` | Track parcel by tracking number |
+| `Redx::cancelParcel($parcelId, $payload)` | Cancel parcel |
+| `Redx::areas($query)` | Get RedX areas |
+| `Redx::stores($query)` | Get RedX stores |
+| `Redx::getEndpoint($name, $replacements, $query)` | Call a configured GET endpoint |
+| `Redx::postEndpoint($name, $payload, $replacements)` | Call a configured POST endpoint |
+| `Redx::putEndpoint($name, $payload, $replacements)` | Call a configured PUT endpoint |
+| `Redx::patchEndpoint($name, $payload, $replacements)` | Call a configured PATCH endpoint |
+| `Redx::deleteEndpoint($name, $payload, $replacements)` | Call a configured DELETE endpoint |
+| `Redx::callEndpoint($method, $name, $payload, $replacements)` | Call any configured endpoint dynamically |
+| `Redx::endpoint($name, $replacements)` | Resolve a configured endpoint path |
+| `Redx::get($uri, $query)` | Raw GET request |
+| `Redx::post($uri, $payload)` | Raw POST request |
+| `Redx::put($uri, $payload)` | Raw PUT request |
+| `Redx::patch($uri, $payload)` | Raw PATCH request |
+| `Redx::delete($uri, $payload)` | Raw DELETE request |
+| `Redx::request()` | Get the configured Laravel HTTP client |
+
 ### createParcel
 
 Create a new RedX parcel.
@@ -156,6 +191,29 @@ $response = Redx::createParcel([
 if ($response->successful()) {
     $parcel = $response->json();
 }
+```
+
+### parcels
+
+List RedX parcels.
+
+```php
+$response = Redx::parcels([
+    'page' => 1,
+    'status' => 'delivered',
+]);
+
+$parcels = $response->json();
+```
+
+### parcelDetails
+
+Get RedX parcel details by parcel ID.
+
+```php
+$response = Redx::parcelDetails(12345);
+
+$parcel = $response->json();
 ```
 
 ### trackParcel
@@ -178,6 +236,122 @@ $response = Redx::cancelParcel(12345, [
 ]);
 
 $result = $response->json();
+```
+
+### areas
+
+Get RedX delivery areas.
+
+```php
+$response = Redx::areas();
+
+$areas = $response->json();
+```
+
+With query parameters:
+
+```php
+$response = Redx::areas([
+    'district' => 'Dhaka',
+]);
+```
+
+### stores
+
+Get RedX stores.
+
+```php
+$response = Redx::stores();
+
+$stores = $response->json();
+```
+
+## Easy Use For All Endpoints
+
+You can add any RedX API endpoint to `config/redx-api-integration.php` and call it by name.
+
+Example config:
+
+```php
+'endpoints' => [
+    'create_parcel' => '/parcel',
+    'parcel_details' => '/parcel/{parcel_id}',
+    'track_parcel' => '/parcel/track/{tracking_id}',
+    'my_custom_endpoint' => '/merchant/custom/{id}',
+],
+```
+
+Call a configured GET endpoint:
+
+```php
+$response = Redx::getEndpoint(
+    name: 'my_custom_endpoint',
+    replacements: ['id' => 123],
+    query: ['page' => 1]
+);
+```
+
+Call a configured POST endpoint:
+
+```php
+$response = Redx::postEndpoint(
+    name: 'create_parcel',
+    payload: [
+        'customer_name' => 'Customer Name',
+        'customer_phone' => '01700000000',
+    ]
+);
+```
+
+Call a configured PUT endpoint:
+
+```php
+$response = Redx::putEndpoint(
+    name: 'my_custom_endpoint',
+    payload: ['status' => 'updated'],
+    replacements: ['id' => 123]
+);
+```
+
+Call a configured PATCH endpoint:
+
+```php
+$response = Redx::patchEndpoint(
+    name: 'my_custom_endpoint',
+    payload: ['status' => 'updated'],
+    replacements: ['id' => 123]
+);
+```
+
+Call a configured DELETE endpoint:
+
+```php
+$response = Redx::deleteEndpoint(
+    name: 'my_custom_endpoint',
+    payload: ['reason' => 'Not needed'],
+    replacements: ['id' => 123]
+);
+```
+
+Call any configured endpoint dynamically:
+
+```php
+$response = Redx::callEndpoint(
+    method: 'post',
+    name: 'my_custom_endpoint',
+    payload: ['key' => 'value'],
+    replacements: ['id' => 123]
+);
+```
+
+Resolve only the endpoint path:
+
+```php
+$uri = Redx::endpoint('parcel_details', [
+    'parcel_id' => 12345,
+]);
+
+// Result: /parcel/12345
 ```
 
 ### get
@@ -216,6 +390,16 @@ Call any RedX PUT endpoint.
 
 ```php
 $response = Redx::put('/parcel/12345', [
+    'delivery_address' => 'Updated address, Dhaka',
+]);
+```
+
+### patch
+
+Call any RedX PATCH endpoint.
+
+```php
+$response = Redx::patch('/parcel/12345', [
     'delivery_address' => 'Updated address, Dhaka',
 ]);
 ```

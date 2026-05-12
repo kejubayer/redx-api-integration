@@ -22,8 +22,12 @@ return [
 
     'endpoints' => [
         'create_parcel' => env('REDX_CREATE_PARCEL_ENDPOINT', '/parcel'),
+        'list_parcels' => env('REDX_LIST_PARCELS_ENDPOINT', '/parcel'),
+        'parcel_details' => env('REDX_PARCEL_DETAILS_ENDPOINT', '/parcel/{parcel_id}'),
         'track_parcel' => env('REDX_TRACK_PARCEL_ENDPOINT', '/parcel/track/{tracking_id}'),
         'cancel_parcel' => env('REDX_CANCEL_PARCEL_ENDPOINT', '/parcel/{parcel_id}/cancel'),
+        'areas' => env('REDX_AREAS_ENDPOINT', '/areas'),
+        'stores' => env('REDX_STORES_ENDPOINT', '/stores'),
     ],
 
     /*
