@@ -120,7 +120,7 @@ Use the facade:
 ```php
 use Kejubayer\RedxApiIntegration\Facades\Redx;
 
-$response = Redx::createParcel([
+$data = Redx::createParcel([
     'customer_name' => 'Customer Name',
     'customer_phone' => '01700000000',
     'delivery_area' => 'Dhaka',
@@ -130,8 +130,6 @@ $response = Redx::createParcel([
     'parcel_weight' => 1,
     'value' => 1000,
 ]);
-
-$data = $response->json();
 ```
 
 Use dependency injection:
@@ -143,7 +141,7 @@ class ParcelController
 {
     public function store(RedxApiIntegration $redx)
     {
-        $response = $redx->createParcel([
+        return $redx->createParcel([
             'customer_name' => 'Customer Name',
             'customer_phone' => '01700000000',
             'delivery_area' => 'Dhaka',
@@ -153,8 +151,6 @@ class ParcelController
             'parcel_weight' => 1,
             'value' => 1000,
         ]);
-
-        return $response->json();
     }
 }
 ```
@@ -185,6 +181,11 @@ Quick method list:
 | `Redx::patch($uri, $payload)` | Raw PATCH request |
 | `Redx::delete($uri, $payload)` | Raw DELETE request |
 | `Redx::request()` | Get the configured Laravel HTTP client |
+| `Redx::getResponse($uri, $query)` | Raw GET request with Laravel response object |
+| `Redx::postResponse($uri, $payload)` | Raw POST request with Laravel response object |
+| `Redx::putResponse($uri, $payload)` | Raw PUT request with Laravel response object |
+| `Redx::patchResponse($uri, $payload)` | Raw PATCH request with Laravel response object |
+| `Redx::deleteResponse($uri, $payload)` | Raw DELETE request with Laravel response object |
 
 ### createParcel
 
@@ -193,7 +194,7 @@ Create a new RedX parcel.
 ```php
 use Kejubayer\RedxApiIntegration\Facades\Redx;
 
-$response = Redx::createParcel([
+$parcel = Redx::createParcel([
     'customer_name' => 'Customer Name',
     'customer_phone' => '01700000000',
     'delivery_area' => 'Dhaka',
@@ -214,10 +215,6 @@ $response = Redx::createParcel([
         ],
     ],
 ]);
-
-if ($response->successful()) {
-    $parcel = $response->json();
-}
 ```
 
 Required RedX create parcel fields usually include:
@@ -234,12 +231,10 @@ Use `merchant_invoice_id` for your invoice number when creating a parcel. Webhoo
 List RedX parcels.
 
 ```php
-$response = Redx::parcels([
+$parcels = Redx::parcels([
     'page' => 1,
     'status' => 'delivered',
 ]);
-
-$parcels = $response->json();
 ```
 
 ### parcelDetails
@@ -247,9 +242,7 @@ $parcels = $response->json();
 Get RedX parcel details by parcel ID.
 
 ```php
-$response = Redx::parcelDetails(12345);
-
-$parcel = $response->json();
+$parcel = Redx::parcelDetails(12345);
 ```
 
 ### trackParcel
@@ -257,9 +250,7 @@ $parcel = $response->json();
 Track a parcel by RedX tracking number.
 
 ```php
-$response = Redx::trackParcel('25A223SU17V6CH');
-
-$tracking = $response->json();
+$tracking = Redx::trackParcel('25A223SU17V6CH');
 ```
 
 ### cancelParcel
@@ -267,11 +258,9 @@ $tracking = $response->json();
 Cancel a parcel by parcel ID.
 
 ```php
-$response = Redx::cancelParcel(12345, [
+$result = Redx::cancelParcel(12345, [
     'reason' => 'Customer cancelled the order',
 ]);
-
-$result = $response->json();
 ```
 
 ### areas
@@ -279,15 +268,13 @@ $result = $response->json();
 Get RedX delivery areas.
 
 ```php
-$response = Redx::areas();
-
-$areas = $response->json();
+$areas = Redx::areas();
 ```
 
 With query parameters:
 
 ```php
-$response = Redx::areas([
+$areas = Redx::areas([
     'district' => 'Dhaka',
 ]);
 ```
@@ -297,9 +284,7 @@ $response = Redx::areas([
 Get RedX stores.
 
 ```php
-$response = Redx::stores();
-
-$stores = $response->json();
+$stores = Redx::stores();
 ```
 
 ## Easy Use For All Endpoints
@@ -320,7 +305,7 @@ Example config:
 Call a configured GET endpoint:
 
 ```php
-$response = Redx::getEndpoint(
+$data = Redx::getEndpoint(
     name: 'my_custom_endpoint',
     replacements: ['id' => 123],
     query: ['page' => 1]
@@ -330,7 +315,7 @@ $response = Redx::getEndpoint(
 Call a configured POST endpoint:
 
 ```php
-$response = Redx::postEndpoint(
+$data = Redx::postEndpoint(
     name: 'create_parcel',
     payload: [
         'customer_name' => 'Customer Name',
@@ -342,7 +327,7 @@ $response = Redx::postEndpoint(
 Call a configured PUT endpoint:
 
 ```php
-$response = Redx::putEndpoint(
+$data = Redx::putEndpoint(
     name: 'my_custom_endpoint',
     payload: ['status' => 'updated'],
     replacements: ['id' => 123]
@@ -352,7 +337,7 @@ $response = Redx::putEndpoint(
 Call a configured PATCH endpoint:
 
 ```php
-$response = Redx::patchEndpoint(
+$data = Redx::patchEndpoint(
     name: 'my_custom_endpoint',
     payload: ['status' => 'updated'],
     replacements: ['id' => 123]
@@ -362,7 +347,7 @@ $response = Redx::patchEndpoint(
 Call a configured DELETE endpoint:
 
 ```php
-$response = Redx::deleteEndpoint(
+$data = Redx::deleteEndpoint(
     name: 'my_custom_endpoint',
     payload: ['reason' => 'Not needed'],
     replacements: ['id' => 123]
@@ -372,7 +357,7 @@ $response = Redx::deleteEndpoint(
 Call any configured endpoint dynamically:
 
 ```php
-$response = Redx::callEndpoint(
+$data = Redx::callEndpoint(
     method: 'post',
     name: 'my_custom_endpoint',
     payload: ['key' => 'value'],
@@ -395,15 +380,13 @@ $uri = Redx::endpoint('parcel_details', [
 Call any RedX GET endpoint.
 
 ```php
-$response = Redx::get('/parcel/track/25A223SU17V6CH');
-
-$data = $response->json();
+$data = Redx::get('/parcel/track/25A223SU17V6CH');
 ```
 
 With query parameters:
 
 ```php
-$response = Redx::get('/parcels', [
+$data = Redx::get('/parcels', [
     'status' => 'delivered',
     'page' => 1,
 ]);
@@ -414,7 +397,7 @@ $response = Redx::get('/parcels', [
 Call any RedX POST endpoint.
 
 ```php
-$response = Redx::post('/parcel', [
+$data = Redx::post('/parcel', [
     'customer_name' => 'Customer Name',
     'customer_phone' => '01700000000',
 ]);
@@ -425,7 +408,7 @@ $response = Redx::post('/parcel', [
 Call any RedX PUT endpoint.
 
 ```php
-$response = Redx::put('/parcel/12345', [
+$data = Redx::put('/parcel/12345', [
     'customer_address' => 'Updated address, Dhaka',
 ]);
 ```
@@ -435,7 +418,7 @@ $response = Redx::put('/parcel/12345', [
 Call any RedX PATCH endpoint.
 
 ```php
-$response = Redx::patch('/parcel/12345', [
+$data = Redx::patch('/parcel/12345', [
     'customer_address' => 'Updated address, Dhaka',
 ]);
 ```
@@ -445,13 +428,13 @@ $response = Redx::patch('/parcel/12345', [
 Call any RedX DELETE endpoint.
 
 ```php
-$response = Redx::delete('/parcel/12345');
+$data = Redx::delete('/parcel/12345');
 ```
 
 With a request body:
 
 ```php
-$response = Redx::delete('/parcel/12345', [
+$data = Redx::delete('/parcel/12345', [
     'reason' => 'Duplicate order',
 ]);
 ```
@@ -687,12 +670,12 @@ curl -X POST "https://your-app.test/redx/webhook" \
   }'
 ```
 
-## Error Handling
+## Raw Response Usage
 
-The client returns Laravel `Illuminate\Http\Client\Response` objects, so you can use standard Laravel response helpers:
+Normal package methods return PHP arrays directly. If you need the raw Laravel `Illuminate\Http\Client\Response` object, use the `*Response` methods or `request()`.
 
 ```php
-$response = Redx::trackParcel('25A223SU17V6CH');
+$response = Redx::getResponse('/parcel/track/25A223SU17V6CH');
 
 if ($response->successful()) {
     return $response->json();
@@ -703,6 +686,18 @@ if ($response->failed()) {
 }
 
 $response->throw();
+```
+
+## Error Handling
+
+Because normal methods return arrays, RedX validation errors are available directly:
+
+```php
+$data = Redx::createParcel($payload);
+
+if (isset($data['validation_errors'])) {
+    return $data['validation_errors'];
+}
 ```
 
 ## License

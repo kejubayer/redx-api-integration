@@ -15,67 +15,67 @@ class RedxApiIntegration
     ) {
     }
 
-    public function createParcel(array $payload): Response
+    public function createParcel(array $payload): array
     {
         return $this->post($this->endpoint('create_parcel'), $payload);
     }
 
-    public function parcels(array $query = []): Response
+    public function parcels(array $query = []): array
     {
         return $this->get($this->endpoint('list_parcels'), $query);
     }
 
-    public function parcelDetails(string|int $parcelId): Response
+    public function parcelDetails(string|int $parcelId): array
     {
         return $this->get($this->endpoint('parcel_details', ['parcel_id' => (string) $parcelId]));
     }
 
-    public function trackParcel(string $trackingId): Response
+    public function trackParcel(string $trackingId): array
     {
         return $this->get($this->endpoint('track_parcel', ['tracking_id' => $trackingId]));
     }
 
-    public function cancelParcel(string|int $parcelId, array $payload = []): Response
+    public function cancelParcel(string|int $parcelId, array $payload = []): array
     {
         return $this->post($this->endpoint('cancel_parcel', ['parcel_id' => (string) $parcelId]), $payload);
     }
 
-    public function areas(array $query = []): Response
+    public function areas(array $query = []): array
     {
         return $this->get($this->endpoint('areas'), $query);
     }
 
-    public function stores(array $query = []): Response
+    public function stores(array $query = []): array
     {
         return $this->get($this->endpoint('stores'), $query);
     }
 
-    public function getEndpoint(string $name, array $replacements = [], array $query = []): Response
+    public function getEndpoint(string $name, array $replacements = [], array $query = []): array
     {
         return $this->get($this->endpoint($name, $replacements), $query);
     }
 
-    public function postEndpoint(string $name, array $payload = [], array $replacements = []): Response
+    public function postEndpoint(string $name, array $payload = [], array $replacements = []): array
     {
         return $this->post($this->endpoint($name, $replacements), $payload);
     }
 
-    public function putEndpoint(string $name, array $payload = [], array $replacements = []): Response
+    public function putEndpoint(string $name, array $payload = [], array $replacements = []): array
     {
         return $this->put($this->endpoint($name, $replacements), $payload);
     }
 
-    public function patchEndpoint(string $name, array $payload = [], array $replacements = []): Response
+    public function patchEndpoint(string $name, array $payload = [], array $replacements = []): array
     {
         return $this->patch($this->endpoint($name, $replacements), $payload);
     }
 
-    public function deleteEndpoint(string $name, array $payload = [], array $replacements = []): Response
+    public function deleteEndpoint(string $name, array $payload = [], array $replacements = []): array
     {
         return $this->delete($this->endpoint($name, $replacements), $payload);
     }
 
-    public function callEndpoint(string $method, string $name, array $payload = [], array $replacements = []): Response
+    public function callEndpoint(string $method, string $name, array $payload = [], array $replacements = []): array
     {
         return match (strtolower($method)) {
             'get' => $this->getEndpoint($name, $replacements, $payload),
@@ -87,27 +87,52 @@ class RedxApiIntegration
         };
     }
 
-    public function get(string $uri, array $query = []): Response
+    public function get(string $uri, array $query = []): array
+    {
+        return $this->toArray($this->request()->get($uri, $query));
+    }
+
+    public function post(string $uri, array $payload = []): array
+    {
+        return $this->toArray($this->request()->post($uri, $payload));
+    }
+
+    public function put(string $uri, array $payload = []): array
+    {
+        return $this->toArray($this->request()->put($uri, $payload));
+    }
+
+    public function patch(string $uri, array $payload = []): array
+    {
+        return $this->toArray($this->request()->patch($uri, $payload));
+    }
+
+    public function delete(string $uri, array $payload = []): array
+    {
+        return $this->toArray($this->request()->delete($uri, $payload));
+    }
+
+    public function getResponse(string $uri, array $query = []): Response
     {
         return $this->request()->get($uri, $query);
     }
 
-    public function post(string $uri, array $payload = []): Response
+    public function postResponse(string $uri, array $payload = []): Response
     {
         return $this->request()->post($uri, $payload);
     }
 
-    public function put(string $uri, array $payload = []): Response
+    public function putResponse(string $uri, array $payload = []): Response
     {
         return $this->request()->put($uri, $payload);
     }
 
-    public function patch(string $uri, array $payload = []): Response
+    public function patchResponse(string $uri, array $payload = []): Response
     {
         return $this->request()->patch($uri, $payload);
     }
 
-    public function delete(string $uri, array $payload = []): Response
+    public function deleteResponse(string $uri, array $payload = []): Response
     {
         return $this->request()->delete($uri, $payload);
     }
@@ -148,5 +173,19 @@ class RedxApiIntegration
         }
 
         return $endpoint;
+    }
+
+    private function toArray(Response $response): array
+    {
+        $data = $response->json();
+
+        if (is_array($data)) {
+            return $data;
+        }
+
+        return [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ];
     }
 }
