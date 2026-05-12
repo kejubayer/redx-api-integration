@@ -20,11 +20,6 @@ class RedxApiIntegration
         return $this->post($this->endpoint('create_parcel'), $payload);
     }
 
-    public function parcels(array $query = []): array
-    {
-        return $this->get($this->endpoint('list_parcels'), $query);
-    }
-
     public function parcelDetails(string|int $parcelId): array
     {
         return $this->get($this->endpoint('parcel_details', ['parcel_id' => (string) $parcelId]));

@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static array createParcel(array $payload)
- * @method static array parcels(array $query = [])
  * @method static array parcelDetails(string|int $parcelId)
  * @method static array trackParcel(string $trackingId)
  * @method static array cancelParcel(string|int $parcelId, array $payload = [])

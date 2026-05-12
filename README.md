@@ -2,7 +2,7 @@
 
 `kejubayer/redx-api-integration` is a Laravel package for RedX courier API integration in Bangladesh. It provides a simple RedX HTTP client, configurable API endpoints, a webhook route, and automatic storage of RedX webhook payloads in a database table.
 
-Use this package to create RedX parcels, track parcels, cancel parcels, call custom RedX API endpoints, and receive RedX delivery status webhook updates in your Laravel application.
+Use this package to create RedX parcels, track parcels, cancel parcels, call configured RedX API endpoints, and receive RedX delivery status webhook updates in your Laravel application.
 
 ## Features
 
@@ -92,7 +92,6 @@ Default endpoint configuration:
 ```php
 'endpoints' => [
     'create_parcel' => env('REDX_CREATE_PARCEL_ENDPOINT', '/parcel'),
-    'list_parcels' => env('REDX_LIST_PARCELS_ENDPOINT', '/parcel'),
     'parcel_details' => env('REDX_PARCEL_DETAILS_ENDPOINT', '/parcel/{parcel_id}'),
     'track_parcel' => env('REDX_TRACK_PARCEL_ENDPOINT', '/parcel/track/{tracking_id}'),
     'cancel_parcel' => env('REDX_CANCEL_PARCEL_ENDPOINT', '/parcel/{parcel_id}/cancel'),
@@ -105,7 +104,6 @@ If your RedX merchant account uses different endpoint paths, update the config o
 
 ```env
 REDX_CREATE_PARCEL_ENDPOINT=/parcel
-REDX_LIST_PARCELS_ENDPOINT=/parcel
 REDX_PARCEL_DETAILS_ENDPOINT=/parcel/{parcel_id}
 REDX_TRACK_PARCEL_ENDPOINT=/parcel/track/{tracking_id}
 REDX_CANCEL_PARCEL_ENDPOINT=/parcel/{parcel_id}/cancel
@@ -162,7 +160,6 @@ Quick method list:
 | Method | Purpose |
 | --- | --- |
 | `Redx::createParcel($payload)` | Create a RedX parcel |
-| `Redx::parcels($query)` | List parcels |
 | `Redx::parcelDetails($parcelId)` | Get parcel details |
 | `Redx::trackParcel($trackingId)` | Track parcel by tracking number |
 | `Redx::cancelParcel($parcelId, $payload)` | Cancel parcel |
@@ -225,17 +222,6 @@ customer_address, cash_collection_amount, parcel_weight, value
 ```
 
 Use `merchant_invoice_id` for your invoice number when creating a parcel. Webhook payloads may return that value as `invoice_number`.
-
-### parcels
-
-List RedX parcels.
-
-```php
-$parcels = Redx::parcels([
-    'page' => 1,
-    'status' => 'delivered',
-]);
-```
 
 ### parcelDetails
 
@@ -381,15 +367,6 @@ Call any RedX GET endpoint.
 
 ```php
 $data = Redx::get('/parcel/track/25A223SU17V6CH');
-```
-
-With query parameters:
-
-```php
-$data = Redx::get('/parcels', [
-    'status' => 'delivered',
-    'page' => 1,
-]);
 ```
 
 ### post
