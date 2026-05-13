@@ -92,11 +92,14 @@ Default endpoint configuration:
 ```php
 'endpoints' => [
     'create_parcel' => env('REDX_CREATE_PARCEL_ENDPOINT', '/parcel'),
-    'parcel_details' => env('REDX_PARCEL_DETAILS_ENDPOINT', '/parcel/{parcel_id}'),
     'track_parcel' => env('REDX_TRACK_PARCEL_ENDPOINT', '/parcel/track/{tracking_id}'),
-    'cancel_parcel' => env('REDX_CANCEL_PARCEL_ENDPOINT', '/parcel/{parcel_id}/cancel'),
+    'parcel_details' => env('REDX_PARCEL_DETAILS_ENDPOINT', '/parcel/info/{tracking_id}'),
+    'update_parcel' => env('REDX_UPDATE_PARCEL_ENDPOINT', '/parcels'),
     'areas' => env('REDX_AREAS_ENDPOINT', '/areas'),
-    'stores' => env('REDX_STORES_ENDPOINT', '/stores'),
+    'create_pickup_store' => env('REDX_CREATE_PICKUP_STORE_ENDPOINT', '/pickup/store'),
+    'pickup_stores' => env('REDX_PICKUP_STORES_ENDPOINT', '/pickup/stores'),
+    'pickup_store_details' => env('REDX_PICKUP_STORE_DETAILS_ENDPOINT', '/pickup/store/info/{pickup_store_id}'),
+    'charge_calculator' => env('REDX_CHARGE_CALCULATOR_ENDPOINT', '/charge/charge_calculator'),
 ],
 ```
 
@@ -104,11 +107,14 @@ If your RedX merchant account uses different endpoint paths, update the config o
 
 ```env
 REDX_CREATE_PARCEL_ENDPOINT=/parcel
-REDX_PARCEL_DETAILS_ENDPOINT=/parcel/{parcel_id}
 REDX_TRACK_PARCEL_ENDPOINT=/parcel/track/{tracking_id}
-REDX_CANCEL_PARCEL_ENDPOINT=/parcel/{parcel_id}/cancel
+REDX_PARCEL_DETAILS_ENDPOINT=/parcel/info/{tracking_id}
+REDX_UPDATE_PARCEL_ENDPOINT=/parcels
 REDX_AREAS_ENDPOINT=/areas
-REDX_STORES_ENDPOINT=/stores
+REDX_CREATE_PICKUP_STORE_ENDPOINT=/pickup/store
+REDX_PICKUP_STORES_ENDPOINT=/pickup/stores
+REDX_PICKUP_STORE_DETAILS_ENDPOINT=/pickup/store/info/{pickup_store_id}
+REDX_CHARGE_CALCULATOR_ENDPOINT=/charge/charge_calculator
 ```
 
 ## Basic Usage
@@ -160,11 +166,18 @@ Quick method list:
 | Method | Purpose |
 | --- | --- |
 | `Redx::createParcel($payload)` | Create a RedX parcel |
-| `Redx::parcelDetails($parcelId)` | Get parcel details |
 | `Redx::trackParcel($trackingId)` | Track parcel by tracking number |
-| `Redx::cancelParcel($parcelId, $payload)` | Cancel parcel |
+| `Redx::parcelDetails($trackingId)` | Get parcel details by tracking ID |
+| `Redx::updateParcel($trackingId, $propertyName, $newValue, $reason)` | Update a parcel property |
+| `Redx::updateParcelRaw($payload)` | Update a parcel with the full RedX payload |
+| `Redx::cancelParcel($trackingId, $reason)` | Cancel parcel by tracking ID |
 | `Redx::areas($query)` | Get RedX areas |
-| `Redx::stores($query)` | Get RedX stores |
+| `Redx::areasByPostCode($postCode)` | Get areas by postal code |
+| `Redx::areasByDistrictName($districtName)` | Get areas by district name |
+| `Redx::createPickupStore($payload)` | Create pickup store |
+| `Redx::pickupStores($query)` | Get pickup stores |
+| `Redx::pickupStoreDetails($pickupStoreId)` | Get pickup store details |
+| `Redx::calculateCharge($query)` | Calculate parcel charge |
 | `Redx::getEndpoint($name, $replacements, $query)` | Call a configured GET endpoint |
 | `Redx::postEndpoint($name, $payload, $replacements)` | Call a configured POST endpoint |
 | `Redx::putEndpoint($name, $payload, $replacements)` | Call a configured PUT endpoint |
@@ -225,10 +238,10 @@ Use `merchant_invoice_id` for your invoice number when creating a parcel. Webhoo
 
 ### parcelDetails
 
-Get RedX parcel details by parcel ID.
+Get RedX parcel details by tracking ID.
 
 ```php
-$parcel = Redx::parcelDetails(12345);
+$parcel = Redx::parcelDetails('21A427TU4BN3R');
 ```
 
 ### trackParcel
@@ -239,14 +252,39 @@ Track a parcel by RedX tracking number.
 $tracking = Redx::trackParcel('25A223SU17V6CH');
 ```
 
-### cancelParcel
+### updateParcel
 
-Cancel a parcel by parcel ID.
+Update a RedX parcel property.
 
 ```php
-$result = Redx::cancelParcel(12345, [
-    'reason' => 'Customer cancelled the order',
+$result = Redx::updateParcel(
+    trackingId: '21A427TU4BN3R',
+    propertyName: 'status',
+    newValue: 'cancelled',
+    reason: 'Customer cancelled the order'
+);
+```
+
+Send the exact RedX update payload:
+
+```php
+$result = Redx::updateParcelRaw([
+    'entity_type' => 'parcel-tracking-id',
+    'entity_id' => '21A427TU4BN3R',
+    'update_details' => [
+        'property_name' => 'status',
+        'new_value' => 'cancelled',
+        'reason' => 'Customer cancelled the order',
+    ],
 ]);
+```
+
+### cancelParcel
+
+Cancel a parcel by tracking ID. This is a shortcut for `updateParcel($trackingId, 'status', 'cancelled', $reason)`.
+
+```php
+$result = Redx::cancelParcel('21A427TU4BN3R', 'Customer cancelled the order');
 ```
 
 ### areas
@@ -261,16 +299,62 @@ With query parameters:
 
 ```php
 $areas = Redx::areas([
-    'district' => 'Dhaka',
+    'district_name' => 'Dhaka',
 ]);
 ```
 
-### stores
-
-Get RedX stores.
+Get areas by post code:
 
 ```php
-$stores = Redx::stores();
+$areas = Redx::areasByPostCode(1206);
+```
+
+Get areas by district name:
+
+```php
+$areas = Redx::areasByDistrictName('Dhaka');
+```
+
+### createPickupStore
+
+Create a RedX pickup store.
+
+```php
+$store = Redx::createPickupStore([
+    'name' => 'Test Pickup Store',
+    'phone' => '8801898000999',
+    'address' => 'Test Address',
+    'area_id' => 1,
+]);
+```
+
+### pickupStores
+
+Get RedX pickup stores.
+
+```php
+$stores = Redx::pickupStores();
+```
+
+### pickupStoreDetails
+
+Get pickup store details.
+
+```php
+$store = Redx::pickupStoreDetails(1);
+```
+
+### calculateCharge
+
+Calculate RedX parcel charge.
+
+```php
+$charge = Redx::calculateCharge([
+    'delivery_area_id' => 12,
+    'pickup_area_id' => 1,
+    'cash_collection_amount' => 1500,
+    'weight' => 500,
+]);
 ```
 
 ## Easy Use For All Endpoints
@@ -282,8 +366,9 @@ Example config:
 ```php
 'endpoints' => [
     'create_parcel' => '/parcel',
-    'parcel_details' => '/parcel/{parcel_id}',
     'track_parcel' => '/parcel/track/{tracking_id}',
+    'parcel_details' => '/parcel/info/{tracking_id}',
+    'update_parcel' => '/parcels',
     'my_custom_endpoint' => '/merchant/custom/{id}',
 ],
 ```
@@ -355,10 +440,10 @@ Resolve only the endpoint path:
 
 ```php
 $uri = Redx::endpoint('parcel_details', [
-    'parcel_id' => 12345,
+    'tracking_id' => '21A427TU4BN3R',
 ]);
 
-// Result: /parcel/12345
+// Result: /parcel/info/21A427TU4BN3R
 ```
 
 ### get

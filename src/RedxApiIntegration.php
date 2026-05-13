@@ -20,9 +20,9 @@ class RedxApiIntegration
         return $this->post($this->endpoint('create_parcel'), $payload);
     }
 
-    public function parcelDetails(string|int $parcelId): array
+    public function parcelDetails(string $trackingId): array
     {
-        return $this->get($this->endpoint('parcel_details', ['parcel_id' => (string) $parcelId]));
+        return $this->get($this->endpoint('parcel_details', ['tracking_id' => $trackingId]));
     }
 
     public function trackParcel(string $trackingId): array
@@ -30,9 +30,27 @@ class RedxApiIntegration
         return $this->get($this->endpoint('track_parcel', ['tracking_id' => $trackingId]));
     }
 
-    public function cancelParcel(string|int $parcelId, array $payload = []): array
+    public function updateParcel(string $trackingId, string $propertyName, string $newValue, ?string $reason = null): array
     {
-        return $this->post($this->endpoint('cancel_parcel', ['parcel_id' => (string) $parcelId]), $payload);
+        return $this->patch($this->endpoint('update_parcel'), [
+            'entity_type' => 'parcel-tracking-id',
+            'entity_id' => $trackingId,
+            'update_details' => array_filter([
+                'property_name' => $propertyName,
+                'new_value' => $newValue,
+                'reason' => $reason,
+            ], static fn ($value): bool => $value !== null),
+        ]);
+    }
+
+    public function updateParcelRaw(array $payload): array
+    {
+        return $this->patch($this->endpoint('update_parcel'), $payload);
+    }
+
+    public function cancelParcel(string $trackingId, ?string $reason = null): array
+    {
+        return $this->updateParcel($trackingId, 'status', 'cancelled', $reason);
     }
 
     public function areas(array $query = []): array
@@ -40,9 +58,39 @@ class RedxApiIntegration
         return $this->get($this->endpoint('areas'), $query);
     }
 
+    public function areasByPostCode(string|int $postCode): array
+    {
+        return $this->areas(['post_code' => $postCode]);
+    }
+
+    public function areasByDistrictName(string $districtName): array
+    {
+        return $this->areas(['district_name' => $districtName]);
+    }
+
+    public function createPickupStore(array $payload): array
+    {
+        return $this->post($this->endpoint('create_pickup_store'), $payload);
+    }
+
+    public function pickupStores(array $query = []): array
+    {
+        return $this->get($this->endpoint('pickup_stores'), $query);
+    }
+
+    public function pickupStoreDetails(string|int $pickupStoreId): array
+    {
+        return $this->get($this->endpoint('pickup_store_details', ['pickup_store_id' => (string) $pickupStoreId]));
+    }
+
     public function stores(array $query = []): array
     {
-        return $this->get($this->endpoint('stores'), $query);
+        return $this->pickupStores($query);
+    }
+
+    public function calculateCharge(array $query): array
+    {
+        return $this->get($this->endpoint('charge_calculator'), $query);
     }
 
     public function getEndpoint(string $name, array $replacements = [], array $query = []): array

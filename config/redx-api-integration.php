@@ -22,11 +22,14 @@ return [
 
     'endpoints' => [
         'create_parcel' => env('REDX_CREATE_PARCEL_ENDPOINT', '/parcel'),
-        'parcel_details' => env('REDX_PARCEL_DETAILS_ENDPOINT', '/parcel/{parcel_id}'),
         'track_parcel' => env('REDX_TRACK_PARCEL_ENDPOINT', '/parcel/track/{tracking_id}'),
-        'cancel_parcel' => env('REDX_CANCEL_PARCEL_ENDPOINT', '/parcel/{parcel_id}/cancel'),
+        'parcel_details' => env('REDX_PARCEL_DETAILS_ENDPOINT', '/parcel/info/{tracking_id}'),
+        'update_parcel' => env('REDX_UPDATE_PARCEL_ENDPOINT', '/parcels'),
         'areas' => env('REDX_AREAS_ENDPOINT', '/areas'),
-        'stores' => env('REDX_STORES_ENDPOINT', '/stores'),
+        'create_pickup_store' => env('REDX_CREATE_PICKUP_STORE_ENDPOINT', '/pickup/store'),
+        'pickup_stores' => env('REDX_PICKUP_STORES_ENDPOINT', '/pickup/stores'),
+        'pickup_store_details' => env('REDX_PICKUP_STORE_DETAILS_ENDPOINT', '/pickup/store/info/{pickup_store_id}'),
+        'charge_calculator' => env('REDX_CHARGE_CALCULATOR_ENDPOINT', '/charge/charge_calculator'),
     ],
 
     /*
